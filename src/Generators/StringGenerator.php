@@ -14,7 +14,7 @@ class StringGenerator implements CaptchaGenerator
     public function generate(array $config): array
     {
         $length = $config['length'] ?? 5;
-        $characters = $config['characters'] ?? ['1', '2', '3', '4', '6', '7', '8', '9'];
+        $characters = $config['characters'] ?? ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
         $sensitive = $config['sensitive'] ?? false;
 
         $characters = is_string($characters) ? str_split($characters) : $characters;

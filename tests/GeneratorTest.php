@@ -24,11 +24,24 @@ class GeneratorTest extends PHPUnitTestCase
     public function testMathGenerator(): void
     {
         $generator = new MathGenerator();
-        $result = $generator->generate([]);
         
-        $this->assertIsArray($result['value']);
-        $this->assertStringContainsString('+', $result['value'][0]);
-        $this->assertIsString($result['key']);
-        $this->assertFalse($result['sensitive']);
+        // Test multiple times to cover both + and -
+        for ($i = 0; $i < 20; $i++) {
+            $result = $generator->generate([]);
+            
+            $this->assertIsArray($result['value']);
+            $this->assertContains('=', $result['value']);
+            
+            $expression = implode('', $result['value']);
+            if (str_contains($expression, '+')) {
+                $this->assertStringContainsString('+', $expression);
+            } else {
+                $this->assertStringContainsString('-', $expression);
+            }
+            
+            $this->assertIsString($result['key']);
+            $this->assertGreaterThanOrEqual(0, (int)$result['key']);
+            $this->assertFalse($result['sensitive']);
+        }
     }
 }

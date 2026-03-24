@@ -7,6 +7,7 @@ use Illuminate\Contracts\Hashing\Hasher;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Session\Store;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Factory;
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use Intervention\Image\Drivers\Imagick\Driver as ImagickDriver;
 use Intervention\Image\ImageManager;
@@ -28,8 +29,17 @@ class CaptchaServiceProvider extends ServiceProvider
         // HTTP routing
         if (!config('captcha.disable')) {
             $router = $this->app['router'];
-            $router->get('captcha/api/{style?}', [CaptchaController::class, 'getCaptchaApi'])->middleware('web');
-            $router->get('captcha/{style?}', [CaptchaController::class, 'getCaptcha'])->middleware('web');
+            $router->get('captcha/api/{style?}', function (Captcha $captcha, string $style = 'default') {
+                return $captcha->create($style, true);
+            })->middleware('web');
+
+            $router->get('captcha/{style?}', function (Captcha $captcha, string $style = 'default') {
+                if (ob_get_contents()) {
+                    ob_clean();
+                }
+
+                return $captcha->create($style);
+            })->middleware('web');
         }
 
         /* @var Factory $validator */

@@ -43,7 +43,7 @@ class Captcha
     {
         $config = $this->config->get($style);
 
-        $generator = $config['math'] ? new MathGenerator() : new StringGenerator();
+        $generator = $config['math'] ? new MathGenerator($config) : new StringGenerator($config);
         $generatorResult = $generator->generate($config);
 
         $image = $this->imageCreator->make($config, $generatorResult);
