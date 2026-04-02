@@ -28,12 +28,12 @@ class Config
 
         // Merge defaults if not present in style
         $defaults = [
-            'length' => 5,
+            'length' => 4,
             'width' => 120,
             'height' => 36,
             'angle' => 15,
             'lines' => 3,
-            'lineWidth' => 2,
+            'lineWidth' => 1,
             'lineColor' => '#ff00ff',
             'quality' => 90,
             'bgImage' => true,

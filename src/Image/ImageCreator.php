@@ -121,7 +121,7 @@ class ImageCreator
     {
         $lines = $config['lines'] ?? 3;
         $lineColor = $config['lineColor'] ?? '#ff00ff';
-        $lineWidth = $config['lineWidth'] ?? 2;
+        $lineWidth = $config['lineWidth'] ?? 1;
 
         for ($i = 0; $i <= $lines; $i++) {
             $image->drawLine(function (LineFactory $line) use ($image, $i, $lineColor, $lineWidth) {
