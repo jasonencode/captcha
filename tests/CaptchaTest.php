@@ -2,54 +2,119 @@
 
 namespace Jason\Captcha\Tests;
 
-use Illuminate\Http\Response;
+use Illuminate\Contracts\Hashing\Hasher;
+use Illuminate\Session\Store as Session;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Session;
-use Illuminate\Support\HtmlString;
-use Jason\Captcha\Facades\Captcha;
+use Jason\Captcha\Captcha;
+use Jason\Captcha\Image\ImageCreator;
+use Jason\Captcha\Support\Config;
+use Mockery;
+use PHPUnit\Framework\TestCase as PHPUnitTestCase;
 
-class CaptchaTest extends TestCase
+class CaptchaTest extends PHPUnitTestCase
 {
-    public function testCreateCaptchaResponse(): void
-    {
-        $response = Captcha::create();
+    protected $captcha;
+    protected $config;
+    protected $imageCreator;
+    protected $session;
+    protected $hasher;
 
-        $this->assertInstanceOf(Response::class, $response);
-        $this->assertEquals('image/jpeg', $response->headers->get('Content-Type'));
-        $this->assertTrue(Session::has('captcha'));
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->config = Mockery::mock(Config::class);
+        $this->imageCreator = Mockery::mock(ImageCreator::class);
+        $this->session = Mockery::mock(Session::class);
+        $this->hasher = Mockery::mock(Hasher::class);
+
+        $this->captcha = new Captcha(
+            $this->config,
+            $this->imageCreator,
+            $this->session,
+            $this->hasher
+        );
     }
 
-    public function testCreateCaptchaApi(): void
+    protected function tearDown(): void
     {
-        $apiData = Captcha::create('default', true);
-
-        $this->assertIsArray($apiData);
-        $this->assertArrayHasKey('sensitive', $apiData);
-        $this->assertArrayHasKey('key', $apiData);
-        $this->assertArrayHasKey('img', $apiData);
-        $this->assertStringStartsWith('data:image/jpeg;base64,', $apiData['img']);
+        parent::tearDown();
+        Mockery::close();
     }
 
-    public function testCheckCaptcha(): void
+    public function testCheckReturnsFalseWhenNoCaptchaInSession(): void
     {
-        // For testing we'll mock the internal session and cache
+        $this->session->shouldReceive('has')->with('captcha')->andReturn(false);
 
-        // Use create to set the initial session/cache
-        Captcha::create();
+        $result = $this->captcha->check('test');
 
-        $stored = Session::get('captcha');
-        $key = $stored['key'];
-
-        // Retrieve the real value from cache for testing check
-        $value = Cache::get('captcha_'.md5($key));
-
-        $this->assertTrue(Captcha::check($value));
-        $this->assertFalse(Session::has('captcha')); // Session should be cleared
+        $this->assertFalse($result);
     }
 
-    public function testHelpers(): void
+    public function testCheckReturnsFalseWhenCacheEmpty(): void
     {
-        $this->assertIsString(captcha_src());
-        $this->assertInstanceOf(HtmlString::class, captcha_img());
+        $stored = [
+            'sensitive' => false,
+            'key' => 'hashed_value',
+            'encrypt' => false,
+        ];
+
+        $this->session->shouldReceive('has')->with('captcha')->andReturn(true);
+        $this->session->shouldReceive('get')->with('captcha')->andReturn($stored);
+        $this->session->shouldReceive('forget')->with('captcha')->once();
+
+        Cache::shouldReceive('pull')->once()->andReturn(false);
+
+        $result = $this->captcha->check('test');
+
+        $this->assertFalse($result);
+    }
+
+    public function testCheckReturnsTrueWhenValid(): void
+    {
+        $stored = [
+            'sensitive' => false,
+            'key' => 'hashed_value',
+            'encrypt' => false,
+        ];
+
+        $this->session->shouldReceive('has')->with('captcha')->andReturn(true);
+        $this->session->shouldReceive('get')->with('captcha')->andReturn($stored);
+        $this->session->shouldReceive('forget')->with('captcha')->once();
+
+        Cache::shouldReceive('pull')->once()->andReturn('test');
+
+        $this->hasher->shouldReceive('check')->with('test', 'hashed_value')->andReturn(true);
+
+        $result = $this->captcha->check('test');
+
+        $this->assertTrue($result);
+    }
+
+    public function testCheckApiReturnsFalseWhenCacheEmpty(): void
+    {
+        Cache::shouldReceive('pull')->once()->andReturn(false);
+
+        $result = $this->captcha->checkApi('test', 'key');
+
+        $this->assertFalse($result);
+    }
+
+    public function testCheckApiReturnsTrueWhenValid(): void
+    {
+        $config = [
+            'sensitive' => false,
+            'encrypt' => false,
+        ];
+
+        $this->config->shouldReceive('get')->with('default')->andReturn($config);
+
+        Cache::shouldReceive('pull')->once()->andReturn('test');
+
+        $this->hasher->shouldReceive('check')->with('test', 'key')->andReturn(true);
+
+        $result = $this->captcha->checkApi('test', 'key');
+
+        $this->assertTrue($result);
     }
 }

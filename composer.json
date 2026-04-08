@@ -20,7 +20,7 @@
     "require": {
         "php": "^8.2",
         "ext-gd": "*",
-        "laravel/framework": "^10.0|^11.0|^12.0|^13.0",
+        "laravel/framework": "^11.0|^12.0|^13.0",
         "intervention/image": "^3.11"
     },
     "autoload": {
@@ -37,8 +37,8 @@
         }
     },
     "require-dev": {
-        "phpunit/phpunit": "^10.0",
-        "orchestra/testbench": "^8.0|^9.0"
+        "phpunit/phpunit": "^10.0|^11.0|^12.0",
+        "mockery/mockery": "^1.6"
     },
     "minimum-stability": "stable",
     "extra": {

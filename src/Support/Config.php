@@ -19,7 +19,7 @@ class Config
     public function get(string $style): array
     {
         $baseConfig = [
-            'characters' => $this->config->get('captcha.characters', ['1', '2', '3', '4', '6', '7', '8', '9']),
+            'characters' => $this->config->get('captcha.characters', ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']),
             'fontsDirectory' => dirname(__DIR__, 2).'/assets/fonts',
             'bgsDirectory' => dirname(__DIR__, 2).'/assets/backgrounds',
         ];
