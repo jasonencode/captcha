@@ -12,19 +12,22 @@ class MathGenerator implements CaptchaGenerator
      */
     public function generate(array $config): array
     {
-        $x = random_int(10, 30);
-        $y = random_int(1, 9);
+        $operations = ['+', '-', '*'];
+        $operation = $operations[random_int(0, 2)];
 
-        $operation = random_int(0, 1) ? '+' : '-';
-
-        if ($operation === '-') {
-            // Ensure x is always greater than y for subtraction
-            if ($x < $y) {
-                [$x, $y] = [$y, $x];
-            }
-            $result = $x - $y;
+        if ($operation === '*') {
+            $x = random_int(1, 9);
+            $y = random_int(1, 9);
+            $result = $x * $y;
         } else {
-            $result = $x + $y;
+            $x = random_int(10, 30);
+            $y = random_int(1, 9);
+
+            if ($operation === '-') {
+                $result = $x - $y;
+            } else {
+                $result = $x + $y;
+            }
         }
 
         $expression = "$x $operation $y = ";
