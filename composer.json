@@ -23,6 +23,10 @@
         "laravel/framework": "^11.0|^12.0|^13.0",
         "intervention/image": "^3.11"
     },
+        "require-dev": {
+        "phpunit/phpunit": "^10.0|^11.0|^12.0|^13.0",
+        "mockery/mockery": "^1.6"
+    },
     "autoload": {
         "psr-4": {
             "Jason\\Captcha\\": "src/"
@@ -35,10 +39,6 @@
         "psr-4": {
             "Jason\\Captcha\\Tests\\": "tests/"
         }
-    },
-    "require-dev": {
-        "phpunit/phpunit": "^10.0|^11.0|^12.0",
-        "mockery/mockery": "^1.6"
     },
     "minimum-stability": "stable",
     "extra": {
