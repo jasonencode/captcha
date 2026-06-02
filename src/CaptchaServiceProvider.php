@@ -30,11 +30,11 @@ class CaptchaServiceProvider extends ServiceProvider
 
         // HTTP routing
         if (!config('captcha.disable')) {
-            Route::get('captcha/api/{style?}', function (Captcha $captcha, string $style = 'default') {
+            Route::get('captcha/api/{style?}', static function (Captcha $captcha, string $style = 'default') {
                 return $captcha->create($style, true);
             })->middleware('web');
 
-            Route::get('captcha/{style?}', function (Captcha $captcha, string $style = 'default') {
+            Route::get('captcha/{style?}', static function (Captcha $captcha, string $style = 'default') {
                 if (ob_get_contents()) {
                     ob_clean();
                 }
@@ -42,13 +42,13 @@ class CaptchaServiceProvider extends ServiceProvider
                 return $captcha->create($style);
             })->middleware('web');
         }
-        
+
         // Validator extensions
-        Validator::extend('captcha', function ($attribute, $value) {
+        Validator::extend('captcha', static function ($attribute, $value) {
             return config('captcha.disable') || ($value && captcha_check($value));
         });
 
-        Validator::extend('captcha_api', function ($attribute, $value, $parameters) {
+        Validator::extend('captcha_api', static function ($attribute, $value, $parameters) {
             return config('captcha.disable') || ($value && captcha_api_check($value, $parameters[0], $parameters[1] ?? 'default'));
         });
     }

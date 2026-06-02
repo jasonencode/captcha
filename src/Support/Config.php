@@ -19,7 +19,6 @@ class Config
     public function get(string $style): array
     {
         $baseConfig = [
-            'characters' => $this->config->get('captcha.characters', ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']),
             'fontsDirectory' => dirname(__DIR__, 2).'/assets/fonts',
             'bgsDirectory' => dirname(__DIR__, 2).'/assets/backgrounds',
         ];
@@ -28,6 +27,7 @@ class Config
 
         // Merge defaults if not present in style
         $defaults = [
+            'characters' => $this->config->get('captcha.characters', ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']),
             'length' => 4,
             'width' => 120,
             'height' => 36,

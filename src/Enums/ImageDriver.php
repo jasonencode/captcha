@@ -5,7 +5,7 @@ namespace Jason\Captcha\Enums;
 enum ImageDriver: string
 {
     case GD = 'gd';
-    
+
     case IMAGICK = 'imagick';
 
     /**

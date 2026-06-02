@@ -17,6 +17,8 @@ class ImageCreator
 
     protected array $fonts = [];
 
+    protected array $chineseFonts = [];
+
     protected array $backgrounds = [];
 
     protected static array $assetsCache = [];
@@ -74,13 +76,26 @@ class ImageCreator
         $cacheKey = md5($fontsDir.$bgsDir);
 
         if (!isset(self::$assetsCache[$cacheKey])) {
+            $allFonts = array_map(static fn ($file) => $file->getPathName(), $this->files->files($fontsDir));
+
+            // 分离中文字体和英文字体
+            $chineseFonts = array_filter($allFonts, static function ($font) {
+                $lower = strtolower($font);
+
+                return str_contains($lower, 'chinese') || str_contains($lower, 'zh') || str_contains($lower, 'cjk') || str_contains($lower, 'sc');
+            });
+
+            $fonts = array_diff($allFonts, $chineseFonts);
+
             self::$assetsCache[$cacheKey] = [
-                'fonts' => array_map(static fn ($file) => $file->getPathName(), $this->files->files($fontsDir)),
+                'fonts' => $fonts,
+                'chineseFonts' => $chineseFonts,
                 'backgrounds' => array_map(static fn ($file) => $file->getPathName(), $this->files->files($bgsDir)),
             ];
         }
 
         $this->fonts = self::$assetsCache[$cacheKey]['fonts'];
+        $this->chineseFonts = self::$assetsCache[$cacheKey]['chineseFonts'];
         $this->backgrounds = self::$assetsCache[$cacheKey]['backgrounds'];
     }
 
@@ -89,8 +104,12 @@ class ImageCreator
         return $this->backgrounds[array_rand($this->backgrounds)];
     }
 
-    protected function getRandomFont(): string
+    protected function getRandomFont(bool $isChinese = false): string
     {
+        if ($isChinese && !empty($this->chineseFonts)) {
+            return $this->chineseFonts[array_rand($this->chineseFonts)];
+        }
+
         return $this->fonts[array_rand($this->fonts)];
     }
 
@@ -105,16 +124,25 @@ class ImageCreator
 
         foreach ($text as $key => $char) {
             $marginLeft = $padding + ($key * ($width - $padding) / $length);
+            $isChinese = $this->containsChinese($char);
 
-            $image->text($char, $marginLeft, $marginTop, function (FontFactory $font) use ($config, $height, $angle) {
-                $font->filename($this->getRandomFont());
-                $font->size(random_int($height - 10, $height));
+            $image->text($char, $marginLeft, $marginTop, function (FontFactory $font) use ($config, $height, $angle, $isChinese) {
+                $font->filename($this->getRandomFont($isChinese));
+                $font->size($isChinese ? random_int($height - 20, $height - 6) : random_int($height - 10, $height));
                 $font->color($this->getRandomColor($config['fontColors'] ?? []));
                 $font->align('left');
                 $font->valign('top');
                 $font->angle(random_int(-$angle, $angle));
             });
         }
+    }
+
+    /**
+     * 检测字符是否包含中文
+     */
+    protected function containsChinese(string $char): bool
+    {
+        return preg_match('/[\x{4e00}-\x{9fa5}]/u', $char) > 0;
     }
 
     protected function drawLines(Image $image, array $config): void

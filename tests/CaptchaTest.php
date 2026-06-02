@@ -117,4 +117,85 @@ class CaptchaTest extends PHPUnitTestCase
 
         $this->assertTrue($result);
     }
+
+    public function testCheckWithSensitiveMode(): void
+    {
+        $stored = [
+            'sensitive' => true,
+            'key' => 'hashed_value',
+            'encrypt' => false,
+        ];
+
+        $this->session->shouldReceive('has')->with('captcha')->andReturn(true);
+        $this->session->shouldReceive('get')->with('captcha')->andReturn($stored);
+        $this->session->shouldReceive('forget')->with('captcha')->once();
+
+        Cache::shouldReceive('pull')->once()->andReturn('TestValue');
+
+        $this->hasher->shouldReceive('check')->with('TestValue', 'hashed_value')->andReturn(true);
+
+        $result = $this->captcha->check('TestValue');
+
+        $this->assertTrue($result);
+    }
+
+    public function testCheckConvertsToLowerCaseWhenNonSensitive(): void
+    {
+        $stored = [
+            'sensitive' => false,
+            'key' => 'hashed_value',
+            'encrypt' => false,
+        ];
+
+        $this->session->shouldReceive('has')->with('captcha')->andReturn(true);
+        $this->session->shouldReceive('get')->with('captcha')->andReturn($stored);
+        $this->session->shouldReceive('forget')->with('captcha')->once();
+
+        Cache::shouldReceive('pull')->once()->andReturn('ABC');
+
+        $this->hasher->shouldReceive('check')->with('abc', 'hashed_value')->andReturn(true);
+
+        $result = $this->captcha->check('ABC');
+
+        $this->assertTrue($result);
+    }
+
+    public function testCheckApiWithSensitiveStyle(): void
+    {
+        $config = [
+            'sensitive' => true,
+            'encrypt' => false,
+        ];
+
+        $this->config->shouldReceive('get')->with('chinese')->andReturn($config);
+
+        Cache::shouldReceive('pull')->once()->andReturn('ABC');
+
+        $this->hasher->shouldReceive('check')->with('ABC', 'key')->andReturn(true);
+
+        $result = $this->captcha->checkApi('ABC', 'key', 'chinese');
+
+        $this->assertTrue($result);
+    }
+
+    public function testCheckReturnsFalseWhenInvalid(): void
+    {
+        $stored = [
+            'sensitive' => false,
+            'key' => 'hashed_value',
+            'encrypt' => false,
+        ];
+
+        $this->session->shouldReceive('has')->with('captcha')->andReturn(true);
+        $this->session->shouldReceive('get')->with('captcha')->andReturn($stored);
+
+        Cache::shouldReceive('pull')->once()->andReturn('wrong');
+
+        $this->hasher->shouldReceive('check')->with('wrong', 'hashed_value')->andReturn(false);
+
+        $result = $this->captcha->check('wrong');
+
+        $this->assertFalse($result);
+        $this->session->shouldNotHaveReceived('forget', ['captcha']);
+    }
 }

@@ -9,8 +9,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
-use Jason\Captcha\Generators\ImageRecognitionGenerator;
-use Jason\Captcha\Generators\LogicGenerator;
+use Jason\Captcha\Generators\ChineseGenerator;
 use Jason\Captcha\Generators\MathGenerator;
 use Jason\Captcha\Generators\StringGenerator;
 use Jason\Captcha\Image\ImageCreator;
@@ -46,10 +45,9 @@ class Captcha
         $config = $this->config->get($style);
 
         $generator = match (true) {
-            $config['math']  => new MathGenerator(),
-            $style === 'logic' => new LogicGenerator(),
-            $style === 'image' => new ImageRecognitionGenerator(),
-            default           => new StringGenerator(),
+            $config['math'] => new MathGenerator(),
+            $style === 'chinese' => new ChineseGenerator(),
+            default => new StringGenerator(),
         };
         $generatorResult = $generator->generate($config);
 
