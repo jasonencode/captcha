@@ -116,14 +116,14 @@ class ImageCreator
         $width = $image->width();
         $height = $image->height();
         $padding = $config['textLeftPadding'] ?? 4;
-        $marginTop = $config['marginTop'] ?? ($height / $length);
+        $marginTop = $config['marginTop'] ?? (int) ($height / $length);
         $angle = $config['angle'] ?? 15;
 
         foreach ($text as $key => $char) {
             $marginLeft = $padding + ($key * ($width - $padding) / $length);
             $isChinese = $this->containsChinese($char);
 
-            $image->text($char, $marginLeft, $marginTop, function (FontFactory $font) use ($config, $height, $angle, $isChinese) {
+            $image->text($char, (int) $marginLeft, (int) $marginTop, function (FontFactory $font) use ($config, $height, $angle, $isChinese) {
                 $font->filepath($this->getRandomFont($isChinese));
                 $font->size($isChinese ? random_int($height - 20, $height - 6) : random_int($height - 10, $height));
                 $font->color($this->getRandomColor($config['fontColors'] ?? []));

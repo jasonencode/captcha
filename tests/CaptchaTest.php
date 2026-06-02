@@ -3,8 +3,12 @@
 namespace Jason\Captcha\Tests;
 
 use Illuminate\Contracts\Hashing\Hasher;
+use Illuminate\Http\Response;
 use Illuminate\Session\Store as Session;
 use Illuminate\Support\Facades\Cache;
+use Intervention\Image\EncodedImage;
+use Intervention\Image\Interfaces\DataUriInterface;
+use Intervention\Image\Interfaces\ImageInterface;
 use Jason\Captcha\Captcha;
 use Jason\Captcha\Image\ImageCreator;
 use Jason\Captcha\Support\Config;
@@ -197,5 +201,121 @@ class CaptchaTest extends PHPUnitTestCase
 
         $this->assertFalse($result);
         $this->session->shouldNotHaveReceived('forget', ['captcha']);
+    }
+
+    public function testCreateReturnsResponse(): void
+    {
+        $config = [
+            'math' => false,
+            'expire' => 60,
+            'encrypt' => false,
+            'quality' => 90,
+        ];
+
+        $encodedImage = Mockery::mock(EncodedImage::class);
+        $encodedImage->shouldReceive('__toString')->andReturn('fake-jpeg-data');
+
+        $image = Mockery::mock(ImageInterface::class);
+        $image->shouldReceive('encodeUsingFormat')->once()->andReturn($encodedImage);
+
+        $this->config->shouldReceive('get')->with('default')->andReturn($config);
+        $this->imageCreator->shouldReceive('make')->once()->andReturn($image);
+        $this->hasher->shouldReceive('make')->once()->andReturn('hashed_key');
+        $this->session->shouldReceive('put')->once();
+        Cache::shouldReceive('put')->once();
+
+        $result = $this->captcha->create('default');
+
+        $this->assertInstanceOf(Response::class, $result);
+        $this->assertEquals(200, $result->getStatusCode());
+        $this->assertEquals('image/jpeg', $result->headers->get('Content-Type'));
+        $this->assertEquals('fake-jpeg-data', $result->getContent());
+    }
+
+    public function testCreateReturnsApiResponse(): void
+    {
+        $config = [
+            'math' => false,
+            'expire' => 60,
+            'encrypt' => false,
+            'quality' => 90,
+        ];
+
+        $dataUri = Mockery::mock(DataUriInterface::class);
+        $dataUri->shouldReceive('__toString')->andReturn('data:image/jpeg;base64,fake');
+
+        $encodedImage = Mockery::mock(EncodedImage::class);
+        $encodedImage->shouldReceive('toDataUri')->once()->andReturn($dataUri);
+
+        $image = Mockery::mock(ImageInterface::class);
+        $image->shouldReceive('encodeUsingFormat')->once()->andReturn($encodedImage);
+
+        $this->config->shouldReceive('get')->with('default')->andReturn($config);
+        $this->imageCreator->shouldReceive('make')->once()->andReturn($image);
+        $this->hasher->shouldReceive('make')->once()->andReturn('hashed_key');
+        $this->session->shouldReceive('put')->once();
+        Cache::shouldReceive('put')->once();
+
+        $result = $this->captcha->create('default', true);
+
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey('sensitive', $result);
+        $this->assertArrayHasKey('key', $result);
+        $this->assertArrayHasKey('img', $result);
+        $this->assertInstanceOf(DataUriInterface::class, $result['img']);
+        $this->assertEquals('data:image/jpeg;base64,fake', (string) $result['img']);
+    }
+
+    public function testCreateWithMathStyle(): void
+    {
+        $config = [
+            'math' => true,
+            'expire' => 60,
+            'encrypt' => false,
+            'quality' => 90,
+        ];
+
+        $encodedImage = Mockery::mock(EncodedImage::class);
+        $encodedImage->shouldReceive('__toString')->andReturn('fake-data');
+
+        $image = Mockery::mock(ImageInterface::class);
+        $image->shouldReceive('encodeUsingFormat')->once()->andReturn($encodedImage);
+
+        $this->config->shouldReceive('get')->with('math')->andReturn($config);
+        $this->imageCreator->shouldReceive('make')->once()->andReturn($image);
+        $this->hasher->shouldReceive('make')->once()->andReturn('hashed_key');
+        $this->session->shouldReceive('put')->once();
+        Cache::shouldReceive('put')->once();
+
+        $result = $this->captcha->create('math');
+
+        $this->assertInstanceOf(Response::class, $result);
+    }
+
+    public function testCreateWithChineseStyle(): void
+    {
+        $config = [
+            'math' => false,
+            'expire' => 60,
+            'encrypt' => false,
+            'quality' => 90,
+            'sensitive' => true,
+        ];
+
+        $encodedImage = Mockery::mock(EncodedImage::class);
+        $encodedImage->shouldReceive('__toString')->andReturn('fake-data');
+
+        $image = Mockery::mock(ImageInterface::class);
+        $image->shouldReceive('encodeUsingFormat')->once()->andReturn($encodedImage);
+
+        $this->config->shouldReceive('get')->with('chinese')->andReturn($config);
+        $this->imageCreator->shouldReceive('make')->once()->andReturn($image);
+        $this->hasher->shouldReceive('make')->once()->andReturn('hashed_key');
+        $this->session->shouldReceive('put')->once();
+        Cache::shouldReceive('put')->once();
+
+        $result = $this->captcha->create('chinese');
+
+        $this->assertInstanceOf(Response::class, $result);
     }
 }
