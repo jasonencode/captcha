@@ -12,6 +12,7 @@ use Illuminate\Support\ServiceProvider;
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use Intervention\Image\Drivers\Imagick\Driver as ImagickDriver;
 use Intervention\Image\ImageManager;
+use Jason\Captcha\Enums\ImageDriver;
 use Jason\Captcha\Image\ImageCreator;
 use Jason\Captcha\Support\Config;
 
@@ -66,9 +67,10 @@ class CaptchaServiceProvider extends ServiceProvider
         // Bind the ImageManager with an explicit driver
         if (!$this->app->bound(ImageManager::class)) {
             $this->app->singleton(ImageManager::class, function () {
-                $driver = config('captcha.driver', 'gd') === 'imagick' ? new ImagickDriver() : new GdDriver();
+                $driver = ImageDriver::fromConfig(config('captcha.driver', 'gd'));
+                $imageDriver = $driver->isImagick() ? new ImagickDriver() : new GdDriver();
 
-                return ImageManager::withDriver($driver);
+                return ImageManager::withDriver($imageDriver);
             });
         }
 

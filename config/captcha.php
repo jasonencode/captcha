@@ -7,15 +7,17 @@ return [
     | 全局设置
     |--------------------------------------------------------------------------
     |
-    | disable:  是否禁用验证码功能。为 true 时跳过生成与验证，方便本地开发调试。
-    | driver:   图片处理驱动，可选 'gd' 或 'imagick'。GD 随 PHP 自带，Imagick 需安装扩展。
+    | disable:    是否禁用验证码功能。为 true 时跳过生成与验证，方便本地开发调试。
+    | driver:     图片处理驱动，可选值参考 ImageDriver 枚举：
+    |             - 'gd'      : GD 库（PHP 自带，无需额外安装）
+    |             - 'imagick' : ImageMagick（需安装扩展，功能更强大）
     | characters: 默认验证码字符集，排除了易混淆字符（0/O、1/I/l、5/S 等）。
     |
     */
 
     'disable' => env('CAPTCHA_DISABLE', false),
 
-    'driver' => 'gd',
+    'driver' => env('CAPTCHA_DRIVER', 'gd'),
 
     'characters' => [
         '2', '3', '4', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'j', 'm', 'n', 'p', 'q', 'r', 't',
@@ -180,5 +182,29 @@ return [
             '#448aff',
             '#40c4ff',
         ],
+    ],
+
+    'logic' => [
+        'length' => 9,
+        'width' => 160,
+        'height' => 46,
+        'quality' => 90,
+        'lines' => 4,
+        'bgImage' => false,
+        'bgColor' => '#ecf2f4',
+        'fontColors' => ['#2c3e50', '#c0392b', '#16a085', '#8e44ad', '#303f9f'],
+        'contrast' => -5,
+    ],
+
+    'image' => [
+        'length' => 9,
+        'width' => 180,
+        'height' => 50,
+        'quality' => 90,
+        'lines' => 4,
+        'bgImage' => false,
+        'bgColor' => '#ecf2f4',
+        'fontColors' => ['#2c3e50', '#c0392b', '#16a085', '#8e44ad', '#303f9f'],
+        'contrast' => -5,
     ],
 ];
