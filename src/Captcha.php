@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
+use Intervention\Image\Format;
 use Jason\Captcha\Generators\ChineseGenerator;
 use Jason\Captcha\Generators\MathGenerator;
 use Jason\Captcha\Generators\StringGenerator;
@@ -70,11 +71,11 @@ class Captcha
             return [
                 'sensitive' => $generatorResult['sensitive'],
                 'key' => $hash,
-                'img' => $image->toJpg($config['quality'])->toDataUri(),
+                'img' => $image->encodeUsingFormat(Format::JPEG, quality: $config['quality'])->toDataUri(),
             ];
         }
 
-        return new Response($image->toJpg($config['quality']), 200, [
+        return new Response((string) $image->encodeUsingFormat(Format::JPEG, quality: $config['quality']), 200, [
             'Content-Type' => 'image/jpeg',
             'Cache-Control' => 'no-cache, no-store, max-age=0, must-revalidate',
             'Pragma' => 'no-cache',

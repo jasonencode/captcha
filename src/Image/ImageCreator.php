@@ -3,9 +3,10 @@
 namespace Jason\Captcha\Image;
 
 use Illuminate\Filesystem\Filesystem;
+use Intervention\Image\Alignment;
 use Intervention\Image\Geometry\Factories\LineFactory;
-use Intervention\Image\Image;
 use Intervention\Image\ImageManager;
+use Intervention\Image\Interfaces\ImageInterface;
 use Intervention\Image\Typography\FontFactory;
 use Random\RandomException;
 
@@ -29,10 +30,7 @@ class ImageCreator
         $this->imageManager = $imageManager;
     }
 
-    /**
-     * Create the captcha image.
-     */
-    public function make(array $config, array $generatorResult): Image
+    public function make(array $config, array $generatorResult): ImageInterface
     {
         $this->loadAssets($config);
 
@@ -41,11 +39,11 @@ class ImageCreator
         $bgColor = $config['bgColor'] ?? '#ffffff';
         $bgImage = $config['bgImage'] ?? true;
 
-        $canvas = $this->imageManager->create($width, $height)->fill($bgColor);
+        $canvas = $this->imageManager->createImage($width, $height)->fill($bgColor);
 
         if ($bgImage && !empty($this->backgrounds)) {
-            $bg = $this->imageManager->read($this->getRandomBackground())->resize($width, $height);
-            $canvas->place($bg);
+            $bg = $this->imageManager->decodePath($this->getRandomBackground())->resize($width, $height);
+            $canvas->insert($bg);
         }
 
         if (isset($config['contrast']) && $config['contrast'] !== 0) {
@@ -78,7 +76,6 @@ class ImageCreator
         if (!isset(self::$assetsCache[$cacheKey])) {
             $allFonts = array_map(static fn ($file) => $file->getPathName(), $this->files->files($fontsDir));
 
-            // 分离中文字体和英文字体
             $chineseFonts = array_filter($allFonts, static function ($font) {
                 $lower = strtolower($font);
 
@@ -113,7 +110,7 @@ class ImageCreator
         return $this->fonts[array_rand($this->fonts)];
     }
 
-    protected function drawText(Image $image, array $text, array $config): void
+    protected function drawText(ImageInterface $image, array $text, array $config): void
     {
         $length = count($text);
         $width = $image->width();
@@ -127,25 +124,21 @@ class ImageCreator
             $isChinese = $this->containsChinese($char);
 
             $image->text($char, $marginLeft, $marginTop, function (FontFactory $font) use ($config, $height, $angle, $isChinese) {
-                $font->filename($this->getRandomFont($isChinese));
+                $font->filepath($this->getRandomFont($isChinese));
                 $font->size($isChinese ? random_int($height - 20, $height - 6) : random_int($height - 10, $height));
                 $font->color($this->getRandomColor($config['fontColors'] ?? []));
-                $font->align('left');
-                $font->valign('top');
+                $font->align(Alignment::LEFT, Alignment::TOP);
                 $font->angle(random_int(-$angle, $angle));
             });
         }
     }
 
-    /**
-     * 检测字符是否包含中文
-     */
     protected function containsChinese(string $char): bool
     {
         return preg_match('/[\x{4e00}-\x{9fa5}]/u', $char) > 0;
     }
 
-    protected function drawLines(Image $image, array $config): void
+    protected function drawLines(ImageInterface $image, array $config): void
     {
         $lines = $config['lines'] ?? 3;
         $lineColor = $config['lineColor'] ?? '#ff00ff';

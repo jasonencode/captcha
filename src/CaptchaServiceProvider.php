@@ -68,9 +68,11 @@ class CaptchaServiceProvider extends ServiceProvider
         if (!$this->app->bound(ImageManager::class)) {
             $this->app->singleton(ImageManager::class, function () {
                 $driver = ImageDriver::fromConfig(config('captcha.driver', 'gd'));
-                $imageDriver = $driver->isImagick() ? new ImagickDriver() : new GdDriver();
+                $driverClass = $driver->isImagick()
+                    ? ImagickDriver::class
+                    : GdDriver::class;
 
-                return ImageManager::withDriver($imageDriver);
+                return ImageManager::usingDriver($driverClass);
             });
         }
 
