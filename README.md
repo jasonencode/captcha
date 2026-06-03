@@ -22,7 +22,17 @@
 
 ## 预览
 
-![Preview Example](https://image.ibb.co/kZxMLm/image.png)
+生成全部 8 种样式预览：
+
+```bash
+php preview.php
+```
+
+| default | math | number | flat | mini | inverse | admin | chinese |
+|:-------:|:----:|:-----:|:----:|:----:|:-------:|:-----:|:-------:|
+| ![default](assets/preview/default.jpg) | ![math](assets/preview/math.jpg) | ![number](assets/preview/number.jpg) | ![flat](assets/preview/flat.jpg) | ![mini](assets/preview/mini.jpg) | ![inverse](assets/preview/inverse.jpg) | ![admin](assets/preview/admin.jpg) | ![chinese](assets/preview/chinese.jpg) |
+
+> 💡 预览图为随机生成，每次运行 `php preview.php` 会重新生成不同内容。
 
 ## 安装
 
