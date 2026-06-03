@@ -9,3 +9,4 @@ vendor
 .phpunit.result.cache
 .claude
 CLAUDE.md
+/.atomcode
